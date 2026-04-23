@@ -17,7 +17,7 @@ website:
 
   comments:
     utterances:
-      repo: sam-watts/blog
+      repo: sam-watts/sam-watts.github.io
   
 format:
   html:

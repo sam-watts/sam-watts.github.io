@@ -1,7 +1,7 @@
 ---
 title: "About"
 about:
-  template: trestles
+  template: jolla
   links:
     - icon: linkedin
       text: LinkedIn
@@ -11,7 +11,7 @@ about:
       href: https://github.com/sam-watts
     - icon: book
       text: Resume
-      href: https://sam-watts.github.io/resume/
+      href: https://swatts.xyz/resume/
 comments: false
 ---
 
