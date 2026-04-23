@@ -1,0 +1,621 @@
+---
+toc: true
+description: Advent of Code 2023 Solutions in Python
+categories: [python]
+title: 🎄
+date: "2023-12-01"
+  
+jupyter: python3
+code-line-numbers: true
+highlight-style: github
+---
+
+## 1
+[https://adventofcode.com/2023/day/1](https://adventofcode.com/2023/day/1)
+
+Quite challenging for a day 1! Learned some new regex for part 2 which was fun - positive lookahead `?=...` essentially means you can extract overlapping matches
+
+::: {.column-page}
+```{python}
+with open("aoc/1/input.txt", "r") as f:
+    inp = f.readlines()
+
+ONE_TO_NINE = list(map(str, list(range(1, 10))))
+
+
+def extract_first_num(a):
+    for char in a:
+        if char in ONE_TO_NINE:
+            return char
+
+
+total = 0
+for row in inp:
+    total += int(extract_first_num(row) + extract_first_num(row[::-1]))
+
+print("Part 1 answer:")
+print(total)
+
+import re
+
+
+def convert_num(x):
+    num_map = dict(
+        zip(
+            ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
+            ONE_TO_NINE,
+        )
+    )
+
+    if x.isnumeric():
+        return x
+    else:
+        return num_map[x]
+
+
+total = 0
+for row in inp:
+    cap = re.findall(r"(?=(\d|one|two|three|four|five|six|seven|eight|nine))", row)
+    total += int(convert_num(cap[0]) + convert_num(cap[-1]))
+
+
+print("Part 2 answer:")
+print(total)
+
+```
+:::
+## 2
+[https://adventofcode.com/2023/day/2](https://adventofcode.com/2023/day/2)
+
+Feel like this should have been day one 😄
+
+::: {.column-page}
+```{python}
+with open("aoc/2/input.txt", "r") as f:
+    inp = f.readlines()
+    
+total = 0
+    
+for row in inp:
+    index, game = row.split(":")
+    index = int(index.replace("Game ", ""))
+    possible = True
+    
+    for game in game.split(";"):
+        bag_one = dict(
+            red=12,
+            green=13,
+            blue=14,
+        )
+        
+        for colours in game.split(","):
+            num, color = colours.strip().split(" ")
+            if int(num) > bag_one[color]:
+                possible = False
+                
+    if possible:
+        total += index
+                
+print("Part 1 answer:")
+print(total)
+
+import math
+
+total = 0
+
+for row in inp:
+    index, game = row.split(":")
+    index = int(index.replace("Game ", ""))
+    bag_max = dict(
+            red=0,
+            green=0,
+            blue=0,
+        )
+    for game in game.split(";"):   
+        for colours in game.split(","):
+            num, color = colours.strip().split(" ")
+            if int(num) > bag_max[color]:
+                bag_max[color] = int(num)
+                
+    total += math.prod(bag_max.values())
+    
+print("Part 2 answer:")
+print(total)
+```
+:::
+## 3
+[https://adventofcode.com/2023/day/3](https://adventofcode.com/2023/day/3)
+
+I don't like grids 🫠 I probably made this harder than it needed to be. If I were to do this again I probably would have just used euclidian distance comparisons
+
+::: {.column-page}
+```{python}
+import re
+from collections import defaultdict
+from itertools import product
+
+with open("aoc/3/input.txt", "r") as f:
+    inp = f.readlines()
+    
+# examine all unique chars to populate regex pattern and SYMBOLS set
+# print(set(y for x in inp for y in x))
+    
+total = 0
+SYMBOLS = {"*", "#", "$", "+", "-", "%", "=", "/", "&", "@"}
+p = re.compile("\d+|\*|#|\$|\+|-|%|=|\/|&|@")
+
+grid = []
+syms = []
+
+def poss_neighbours(i: int, j: tuple):
+    i_s = list(filter(lambda x: x >= 0, [i, i-1, i+1]))
+    j_s = list(filter(lambda x: x >=0 and x < len(inp[0]), [*j, j[0]-1, j[-1]+1]))
+    
+    for out_i in i_s:
+        for out_j in j_s:
+            if out_i == i and out_j in j:
+                continue
+            
+            yield out_i, out_j
+
+assert set(poss_neighbours(0, (0,))) == {(1,0), (1,1), (0,1)}
+    
+# construct the data structures for iterating over numbers and symbols
+for i, row in enumerate(inp):
+    for m in p.finditer(row):
+        group = m.group()
+        js = tuple(range(*m.span()))
+        out = (group, i, js)
+        
+        if m.group() in SYMBOLS:
+            syms.append(
+                (group, i, js[0])
+            )
+        else:
+            grid.append(
+                (int(group), i, js)
+            )        
+            
+# part 1 logic
+for num, i, js in grid:
+    poss = list(poss_neighbours(i, js))
+    
+    for _, sym_i, sym_j in syms:
+        if (sym_i, sym_j) in poss:
+            total += num
+
+print("Part 1 answer:")
+print(total)
+
+import math
+total = 0
+
+# part 2 logic
+for sym, i, j in syms:
+    if sym == "*":
+        poss = list(poss_neighbours(i, (j, )))
+        
+        adj = set()
+        for num, num_i, num_js in grid:
+            for num_j in num_js:
+                if (num_i, num_j) in poss:
+                    adj.add(num)
+                
+        if len(adj) == 2:
+            total += math.prod(adj)
+
+print("Part 2 answer:")
+print(total)
+```
+:::
+## 4
+[https://adventofcode.com/2023/day/4](https://adventofcode.com/2023/day/4)
+
+Enjoyed the logic for the second part with the copies. I'm sure there was potential to go on a wild goose chase with recursion here, so I'm happy to have avoided the temptation 🤣
+
+::: {.column-page}
+```{python}
+with open("aoc/4/input.txt", "r") as f:
+    inp = f.readlines()
+    
+total = 0
+
+# part 1 logic
+for row in inp:
+    index, rest = row.split(":")
+    
+    win, play = rest.split("|")
+    win = list(filter(lambda x: x.isnumeric(), win.strip().split(" ")))
+    play = list(filter(lambda x: x.isnumeric(), play.strip().split(" ")))
+    score = 0
+    
+    
+    for num in win:
+        if num in play:
+            score += 1
+            
+    if score > 0:
+        total += 2 ** (score - 1)
+        
+
+print("Part 1 answer:")
+print(total)
+
+total = 0
+copies = {}
+
+# part 2 logic
+for row in inp:
+    index, rest = row.split(":")
+    index = int(index.split("d")[1].strip())
+    
+    win, play = rest.split("|")
+    win = list(filter(lambda x: x.isnumeric(), win.strip().split(" ")))
+    play = list(filter(lambda x: x.isnumeric(), play.strip().split(" ")))
+    score = 0
+        
+    for num in win:
+        if num in play:
+            score += 1
+            
+    for x in range(index+1, index+score+1):
+        copies[x] = copies.get(x, 0) + copies.get(index, 0) + 1
+        
+    total += copies.get(index, 0) + 1
+    
+
+print("Part 2 answer:")
+print(total)
+```
+:::
+## 5
+[https://adventofcode.com/2023/day/5](https://adventofcode.com/2023/day/5)
+
+Stuck on part 2 for now...
+
+::: {.column-page}
+```{python}
+from collections import OrderedDict
+from typing import Any
+
+with open("aoc/5/input.txt", "r") as f:
+    inp = f.readlines()
+    
+
+# create maps
+seeds = list(map(int, inp.pop(0).replace("seeds: ", "").strip().split(" ")))
+maps = OrderedDict()
+
+class Mapper:
+    def __init__(self, dest, source, rng):
+        self.dest = dest
+        self.source = source
+        self.rng = rng
+        
+    def check(self, x):
+        return self.source <= x < (self.source + self.rng)
+    
+    def __call__(self, x) -> Any:
+        return x + (self.dest - self.source)
+    
+    def __repr__(self):
+        return f"{self.dest=}|{self.source=}|{self.rng=}"
+
+
+for line in inp:
+    if line == "\n":
+        continue
+    
+    if "map" in line:
+        map_name = line.replace("\n", "").replace(" map:", "")
+    
+    else:
+        dest, source, rng = map(int, line.replace("\n", "").split(" "))
+         
+        maps.setdefault(map_name, []).append(
+            Mapper(dest, source, rng)
+        )
+        
+locations = []
+    
+for x in seeds:
+    print("seed:", x)
+    for k in maps.keys():
+        current_map = maps[k]
+        
+        for f in current_map:
+            if f.check(x):
+                x = f(x)
+                break
+                    
+    locations.append(x)
+    
+print("Part 1 answer:")
+print(min(locations))
+
+
+# This is incredibly slow as too many ints to check!
+# Need to try another approach using ranges!
+# locations = []
+    
+# for z, y in zip(seeds[::2], seeds[1::2]):
+#     for x in range(z, z+y):
+#         # print("seed:", x)
+#         for k in maps.keys():
+#             current_map = maps[k]
+            
+#             for f in current_map:
+#                 if f.check(x):
+#                     x = f(x)
+#                     break
+                        
+#         locations.append(x)
+
+# print("Part 2 answer:")
+# print(min(locations))
+
+```
+:::
+## 6
+[https://adventofcode.com/2023/day/6](https://adventofcode.com/2023/day/6)
+
+There's definitely a more efficient way of doing part 2, but good enough :)
+
+::: {.column-page}
+```{python}
+import math
+
+with open("aoc/6/input.txt", "r") as f:
+    inp = f.readlines()
+    
+time = map(int, filter(lambda x: x.isnumeric(), inp[0].replace("Time:", "").strip().split(" ")))
+dist = map(int, filter(lambda x: x.isnumeric(), inp[1].replace("Distance:", "").strip().split(" ")))
+totals = []
+
+for t, d_record in zip(time, dist):
+    total = 0
+    for i in range(t):
+        v = i
+        d = v * (t - i)
+        
+        if d > d_record:
+            total += 1
+        
+    totals.append(total)
+    
+print("Part 1 answer:")
+print(math.prod(totals))
+
+
+time = int(inp[0].replace("Time:", "").replace(" ", ""))
+dist = int(inp[1].replace("Distance:", "").replace(" ", ""))
+totals = []
+
+t = time
+d_record = dist
+
+total = 0
+for i in range(t):
+    v = i
+    d = v * (t - i)
+    
+    if d > d_record:
+        total += 1
+    
+totals.append(total)
+
+print("Part 2 answer:")
+print(math.prod(totals))
+
+```
+:::
+## 7
+[https://adventofcode.com/2023/day/7](https://adventofcode.com/2023/day/7)
+
+Had a solution that I thought made sense but didn't give the right answer. Went to reddit for inspiration!
+
+::: {.column-page}
+```{python}
+# credit to https://www.reddit.com/r/adventofcode/comments/18cnzbm/comment/kcc4azi/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+
+from collections import Counter
+
+with open("aoc/7/input.txt", "r") as f:
+    inp = f.readlines()
+
+def classify_hand_type(hand: list[int]):
+    counts = Counter(hand)
+    count_of_counts = Counter(counts.values())
+    
+    if count_of_counts.get(5):
+        return 6
+    
+    elif count_of_counts.get(4):
+        return 5
+    
+    elif count_of_counts.get(3) and count_of_counts.get(2):
+        return 4
+    
+    elif count_of_counts.get(3):
+        return 3
+    
+    elif count_of_counts.get(2) == 2:
+        return 2
+    
+    elif count_of_counts.get(2):
+        return 1
+
+    else:
+        return 0
+
+def eval_hand(line, trans):
+    hand, bid = line.split(" ")
+    hand = hand.translate(str.maketrans('TJQKA', trans))
+    top = max(classify_hand_type(hand.replace("1", x)) for x in set(hand))
+    
+    return top, hand, int(bid)
+
+print("Part 1 answer:")
+print(
+    sum(rank * bid for rank, (*_, bid) in enumerate(sorted(map(lambda x: eval_hand(x,'ABCDE'), inp)), start=1))
+)
+
+print("Part 2 answer:")
+print(
+    sum(rank * bid for rank, (*_, bid) in enumerate(sorted(map(lambda x: eval_hand(x,'A1CDE'), inp)), start=1))
+)
+```
+:::
+## 8
+[https://adventofcode.com/2023/day/8](https://adventofcode.com/2023/day/8)
+
+Tried to do part 2 a silly way at first - I didn't realise that all z visits happen on the same cycle for a given starting point!
+
+::: {.column-page}
+```{python}
+with open("aoc/8/input.txt", "r") as f:
+    inp = f.readlines()
+    
+
+class Node:
+    def __init__(self, name, left, right):
+        self.name = name
+        self.L = left
+        self.R = right 
+    
+    def transition(self, direction):
+        return getattr(self, direction)   
+
+total = 0
+
+ins = inp[0].replace("\n", "")
+all_nodes = []
+
+for row in inp[2:]:
+    start, rest = row.split("=")
+    start = start.strip()
+    
+    left, right = rest.split(",")
+    left = left.replace("(","").strip()
+    right = right.replace(")", "").strip()
+    
+    all_nodes.append(
+        Node(start, left, right)
+    )
+    
+current_node = [x for x in all_nodes if x.name == "AAA"][0]
+i = 0
+
+while True:
+    direction = ins[i % len(ins)]
+    
+    current_node = [
+        x for x in all_nodes if x.name == current_node.transition(direction)
+    ][0]
+    
+    i += 1
+    
+    if current_node.name == "ZZZ":
+        break
+    
+total = i
+
+print("Part 1 answer:")
+print(total)
+ 
+current_nodes = [x for x in all_nodes if x.name[-1] == "A"]
+totals = []
+
+for current_node in current_nodes:
+    i = 0
+    while True:
+        direction = ins[i % len(ins)]
+
+        current_node = [
+            x for x in all_nodes if x.name == current_node.transition(direction)
+        ][0]
+        
+        i += 1
+        
+        if current_node.name[-1] == "Z":
+            totals.append(i)
+            break
+    
+import math
+
+print("Part 2 answer:")
+print(math.lcm(*totals))
+
+```
+:::
+## 9
+[https://adventofcode.com/2023/day/9](https://adventofcode.com/2023/day/9)
+
+
+Learned about Lagrangian Interpolation which was ...fun? In a slightly-too-small-nutshell, we
+can construct a summation of polynomials, where each term goes to zero when
+its corresponding x value is inputted to the function. Each term will be in
+the form:
+
+$$
+\frac{\text{diff}_n}{n!}\prod_{i=1}^{n}(x - i)
+$$
+
+Where $n$ is the order of the term (constant, x, x^2 etc.) and $\text{diff}_n$ is the
+difference at the correct level in the sequence of inputs. The differencing
+table is essentially what is constructed in the puzzle explanation. From this
+table, we take the first column of values to use as $diff$.
+
+
+::: {.column-page}
+```{python}
+import math
+
+with open("aoc/9/input.txt", "r") as f:
+    inp = f.readlines()
+    
+total = 0
+
+def calculate_next(diff_col, x):
+    n = len(diff_col)
+    total = 0
+    for i, diff in zip(range(n), diff_col):
+        total += diff / math.factorial(i) * math.prod(x - ns for ns in range(1,i+1))
+        
+    return total
+    
+outputs = []
+for row in inp:
+    seq = list(map(int, row.split(" ")))
+    diffs = [seq]
+    
+    while True:
+        diffs.append([y - x for x,y in zip(diffs[-1], diffs[-1][1:])])
+        
+        if len(set(diffs[-1])) <= 1:
+            break
+                
+    outputs.append(calculate_next([x[0] for x in diffs], len(seq) + 1))
+    
+    
+print("Part 1 answer:")
+print(int(sum(outputs)))
+
+outputs = []
+for row in inp:
+    seq = list(map(int, row.split(" ")))
+    diffs = [seq]
+    
+    while True:
+        diffs.append([y - x for x,y in zip(diffs[-1], diffs[-1][1:])])
+        
+        if len(set(diffs[-1])) <= 1:
+            break
+                
+    outputs.append(calculate_next([x[0] for x in diffs], 0))
+
+print("Part 2 answer:")
+print(int(sum(outputs)))
+
+```
+:::

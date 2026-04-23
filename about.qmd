@@ -1,0 +1,20 @@
+---
+title: "About"
+about:
+  template: trestles
+  links:
+    - icon: linkedin
+      text: LinkedIn
+      href: https://linkedin.com/in/swatts123/
+    - icon: github
+      text: Github
+      href: https://github.com/sam-watts
+    - icon: book
+      text: Resume
+      href: https://sam-watts.github.io/resume/
+comments: false
+---
+
+👋 Hey!
+
+I’m Sam. Right now I work in Machine Learning. I also like to write stuff from time to time.
