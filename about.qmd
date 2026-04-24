@@ -10,8 +10,8 @@ about:
       text: Github
       href: https://github.com/sam-watts
     - icon: book
-      text: Resume
-      href: https://swatts.xyz/resume/
+      text: CV
+      href: https://swatts.xyz/cv/
 comments: false
 ---
 
